@@ -14,6 +14,40 @@
             color: #334155;
         }
 
+        /* ตกแต่งหัวข้อใหม่ */
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .highlight-mflow {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2rem;
+            font-weight: 800;
+            filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.2));
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .highlight-mflow::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #2563eb, transparent);
+            border-radius: 2px;
+        }
+
         .table-wrapper {
             background: white;
             border-radius: 8px;
@@ -68,11 +102,6 @@
             transition: all 0.2s;
         }
 
-        input:focus {
-            background-color: #eff6ff;
-            box-shadow: inset 0 0 0 2px #3b82f6;
-        }
-
         .sticky-col {
             position: sticky;
             left: 0;
@@ -84,6 +113,52 @@
             border-right: 2px solid #cbd5e1;
         }
 
+        /* สถานะข้อมูลถูกต้อง */
+        .valid-success-bg {
+            background-color: #dcfce7 !important; 
+        }
+        .valid-success-text {
+            color: #15803d !important; 
+            font-weight: 700 !important;
+        }
+
+        /* สถานะแจ้งเตือนเมื่อข้อมูลผิด (ปรับปรุงเอฟเฟกต์กะพริบให้แรงขึ้น) */
+        @keyframes pulse-red-alert {
+            0% { background-color: #fee2e2; }
+            50% { background-color: #fca5a5; } /* สีแดงที่ชัดขึ้น */
+            100% { background-color: #fee2e2; }
+        }
+        
+        .valid-error-bg {
+            animation: pulse-red-alert 0.8s infinite ease-in-out !important;
+            border: 2px solid #ef4444 !important;
+            box-shadow: inset 0 0 4px rgba(239, 68, 68, 0.4);
+        }
+        
+        .valid-error-text {
+            color: #b91c1c !important;
+            font-weight: 800 !important;
+        }
+
+        /* หมายเหตุการตรวจสอบ */
+        .validation-note {
+            font-size: 10px;
+            display: block;
+            margin-top: 2px;
+            line-height: 1.1;
+        }
+        
+        .note-error {
+            color: #dc2626; 
+            font-weight: 800;
+            text-decoration: underline;
+        }
+        
+        .note-success {
+            color: #15803d; 
+            font-weight: 700;
+        }
+
         .btn-action {
             transition: all 0.2s;
             cursor: pointer;
@@ -93,40 +168,88 @@
             transform: scale(0.95);
         }
 
-        .valid-success {
-            color: #16a34a !important;
-            font-weight: bold !important;
+        /* Custom Modal Styling */
+        #confirmModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
         }
 
-        .validation-note {
-            font-size: 8px;
-            color: #64748b;
-            display: block;
-            margin-top: 1px;
-            line-height: 1;
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #confirmModal.active {
+            display: flex;
+        }
+
+        #confirmModal.active .modal-content {
+            transform: scale(1);
         }
 
         @media print {
             .no-print { display: none; }
             body { background: white; padding: 0; }
             .table-wrapper { box-shadow: none; margin-bottom: 1rem; }
+            .header-title { color: black; }
+            .highlight-mflow { 
+                -webkit-text-fill-color: #1d4ed8; 
+                background: none;
+            }
         }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="no-print">
+        <div class="modal-content">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">ยืนยันการล้างข้อมูล?</h3>
+            <p class="text-slate-500 mb-8">ข้อมูลทั้งหมดที่คุณกรอกจะถูกลบและไม่สามารถกู้คืนได้ คุณแน่ใจหรือไม่ที่จะดำเนินการต่อ?</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-lg font-semibold hover:bg-slate-200 transition-colors">
+                    ยกเลิก
+                </button>
+                <button onclick="confirmReset()" class="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">
+                    ยืนยันลบข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-[1900px] mx-auto">
         <header class="mb-8 text-center no-print">
-            <h1 class="text-2xl font-bold text-slate-800">ระบบกรอกข้อมูลรายงาน M-Flow</h1>
-            <p class="text-slate-500 italic">ระบบตรวจสอบข้อมูลรายแถวและผลรวม (Auto-Calculation & Validation Enabled)</p>
+            <h1 class="header-title">
+                ระบบตรวจสอบข้อมูลรายงาน <span class="highlight-mflow">M-Flow R11</span>
+            </h1>
+            <p class="text-slate-500 italic mt-2">ระบบตรวจสอบอัตโนมัติ: สีเขียว = ถูกต้อง, <span class="text-red-600 font-bold">สีแดงกะพริบ = ข้อมูลผิดพลาด</span></p>
         </header>
 
-        <!-- ส่วนที่ 1: ตารางสรุปหนี้ -->
+        <!-- ตารางที่ 1: สรุปหนี้ -->
         <div class="table-wrapper">
             <table id="summaryTable">
                 <thead>
                     <tr class="bg-sub-header">
-                        <th class="w-40"></th>
+                        <th class="w-40">ตารางที่ 1</th>
                         <th>จำนวนรายการ</th>
                         <th>จำนวนใบแจ้งหนี้</th>
                         <th>ค่าผ่านทาง</th>
@@ -137,14 +260,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="summary-data-row">
+                    <tr class="summary-data-row" data-type="member">
                         <td class="font-bold bg-slate-50 text-left px-4">สมาชิก</td>
                         <td>
-                            <input type="text" class="summary-member-qty" placeholder="0" oninput="validateAllData()">
+                            <input type="text" class="summary-qty-input" placeholder="0" oninput="validateAllData()">
                             <span class="validation-note"></span>
                         </td>
                         <td><input type="text" placeholder="0" oninput="validateAllData()"></td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
+                        <td>
+                            <input type="text" class="summary-toll-input sum-amt-source" placeholder="0" oninput="validateAllData()">
+                            <span class="validation-note"></span>
+                        </td>
                         <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
                         <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
                         <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
@@ -153,14 +279,17 @@
                             <span class="validation-note"></span>
                         </td>
                     </tr>
-                    <tr class="summary-data-row">
+                    <tr class="summary-data-row" data-type="non-member">
                         <td class="font-bold bg-slate-50 text-left px-4">ไม่ใช่สมาชิก</td>
                         <td>
-                            <input type="text" class="summary-non-member-qty" placeholder="0" oninput="validateAllData()">
+                            <input type="text" class="summary-qty-input" placeholder="0" oninput="validateAllData()">
                             <span class="validation-note"></span>
                         </td>
                         <td><input type="text" placeholder="0" oninput="validateAllData()"></td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
+                        <td>
+                            <input type="text" class="summary-toll-input sum-amt-source" placeholder="0" oninput="validateAllData()">
+                            <span class="validation-note"></span>
+                        </td>
                         <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
                         <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
                         <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
@@ -183,57 +312,41 @@
             </table>
         </div>
 
-        <div id="tablesContainer">
-            <!-- ตารางจะถูกสร้างโดย JS -->
-        </div>
+        <!-- พื้นที่สำหรับตารางที่ 2-5 -->
+        <div id="tablesContainer"></div>
 
         <div class="flex justify-center gap-4 mt-8 no-print pb-10">
             <button onclick="window.print()" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 btn-action shadow-md">
                 พิมพ์รายงาน (PDF)
             </button>
-            <button onclick="resetAll()" class="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 btn-action">
+            <button onclick="openModal()" class="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 btn-action">
                 ล้างข้อมูลทั้งหมด
-            </button>
-            <button onclick="alert('บันทึกข้อมูลจำลองสำเร็จ')" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 btn-action shadow-lg">
-                บันทึกข้อมูล
             </button>
         </div>
     </div>
 
     <script>
         const sections = [
-            {
-                title: "ชำระเงินสำเร็จ (รายการ)",
-                id: "success",
-                rows: ["Counter Service", "Mobile Banking", "บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"]
-            },
-            {
-                title: "ชำระเงินไม่สำเร็จ (รายการ)",
-                id: "failed",
-                rows: ["บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"]
-            },
-            {
-                title: "รอดำเนินการชำระ (รายการ)",
-                id: "pending",
-                rows: ["บัญชีบัตร Easy Pass", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต", "ยังไม่ระบุช่องทาง"]
-            },
-            {
-                title: "ระหว่างดำเนินการชำระ (รายการ)",
-                id: "processing",
-                rows: ["ยอดรวมทุกช่องทาง"]
-            }
+            { title: "ตารางที่ 2: ชำระเงินสำเร็จ (รายการ)", id: "success", rows: ["Counter Service", "Mobile Banking", "บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"] },
+            { title: "ตารางที่ 3: ชำระเงินไม่สำเร็จ (รายการ)", id: "failed", rows: ["บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"] },
+            { title: "ตารางที่ 4: รอดำเนินการชำระ (รายการ)", id: "pending", rows: ["บัญชีบัตร Easy Pass", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต", "ยังไม่ระบุช่องทาง", "รายการโต้แย้งที่ไม่ได้ชำระ"] },
+            { title: "ตารางที่ 5: ระหว่างดำเนินการชำระ (รายการ)", id: "processing", rows: ["ยอดรวมทุกช่องทาง"] }
         ];
 
         const RATES = { C1: 30, C2: 50, C3: 70, C4: 0 };
 
+        function parseVal(val) {
+            if (typeof val !== 'string') val = String(val || '');
+            const cleaned = val.replace(/,/g, '').trim();
+            return parseFloat(cleaned) || 0;
+        }
+
         function createTable(section) {
             let html = `
             <div class="table-wrapper">
-                <table class="data-table" id="table-${section.id}" data-section="${section.id}">
+                <table class="data-table" id="table-${section.id}">
                     <thead>
-                        <tr>
-                            <th colspan="23" class="bg-section-header">${section.title}</th>
-                        </tr>
+                        <tr><th colspan="23" class="bg-section-header">${section.title}</th></tr>
                         <tr>
                             <th rowspan="4" class="sticky-col">ช่องทางการชำระเงิน</th>
                             <th colspan="14" class="bg-sub-header">สมาชิก</th>
@@ -242,9 +355,7 @@
                             <th rowspan="4" class="w-20">ยอดเงินรวมทั้งหมด (บาท)</th>
                         </tr>
                         <tr>
-                            <th colspan="4">บุคคลไทย</th>
-                            <th colspan="4">บุคคลต่างชาติ</th>
-                            <th colspan="4">นิติบุคคล</th>
+                            <th colspan="4">บุคคลไทย</th><th colspan="4">บุคคลต่างชาติ</th><th colspan="4">นิติบุคคล</th>
                             <th rowspan="3" class="w-12 text-[9px]">จำนวนรายการ (รวม)</th>
                             <th rowspan="3" class="w-14 text-[9px]">ยอดเงินรวม (บาท)</th>
                             <th colspan="4" rowspan="2">ประเภทรถ (รายการ)</th>
@@ -252,73 +363,42 @@
                             <th rowspan="3" class="w-14 text-[9px]">ยอดเงินรวม (บาท)</th>
                         </tr>
                         <tr>
-                            <th colspan="4">ประเภทรถ (รายการ)</th>
-                            <th colspan="4">ประเภทรถ (รายการ)</th>
-                            <th colspan="4">ประเภทรถ (รายการ)</th>
+                            <th colspan="4">ประเภทรถ (รายการ)</th><th colspan="4">ประเภทรถ (รายการ)</th><th colspan="4">ประเภทรถ (รายการ)</th>
                         </tr>
                         <tr class="bg-sub-header text-[9px]">
                             ${'<th>C1</th><th>C2</th><th>C3</th><th>C4</th>'.repeat(4)}
                         </tr>
                     </thead>
-                    <tbody>
-            `;
+                    <tbody>`;
 
             section.rows.forEach(rowLabel => {
                 html += `
                 <tr class="data-row">
                     <td class="sticky-col font-medium">${rowLabel}</td>
-                    <!-- สมาชิก C1-C4 -->
                     ${createInputCells(12, 'member-c-group')}
-                    <td>
-                        <input type="text" placeholder="0" class="bg-amber-50 member-row-total-qty" oninput="validateAllData()">
-                        <span class="validation-note row-note"></span>
-                    </td>
-                    <td>
-                        <input type="text" placeholder="0" class="bg-amber-50 member-row-total-amount" oninput="validateAllData()">
-                        <span class="validation-note amount-note"></span>
-                    </td>
-                    
-                    <!-- ไม่ใช่สมาชิก C1-C4 -->
+                    <td><input type="text" class="bg-amber-50 member-row-total-qty" placeholder="0"><span class="validation-note"></span></td>
+                    <td><input type="text" class="bg-amber-50 member-row-total-amount" placeholder="0"><span class="validation-note"></span></td>
                     ${createInputCells(4, 'non-member-c-group')} 
-                    <td>
-                        <input type="text" placeholder="0" class="bg-amber-50 non-member-row-total-qty" oninput="validateAllData()">
-                        <span class="validation-note row-note"></span>
-                    </td>
-                    <td>
-                        <input type="text" placeholder="0" class="bg-amber-50 non-member-row-total-amount" oninput="validateAllData()">
-                        <span class="validation-note amount-note"></span>
-                    </td>
-                    
-                    <td>
-                        <input type="text" placeholder="0" class="bg-blue-50 font-bold grand-row-total-qty" oninput="validateAllData()">
-                        <span class="validation-note qty-note"></span>
-                    </td>
-                    <td>
-                        <input type="text" placeholder="0" class="bg-blue-50 font-bold grand-row-total-amount" oninput="validateAllData()">
-                        <span class="validation-note amount-note"></span>
-                    </td>
+                    <td><input type="text" class="bg-amber-50 non-member-row-total-qty" placeholder="0"><span class="validation-note"></span></td>
+                    <td><input type="text" class="bg-amber-50 non-member-row-total-amount" placeholder="0"><span class="validation-note"></span></td>
+                    <td><input type="text" class="bg-blue-50 font-bold grand-row-total-qty" placeholder="0"><span class="validation-note"></span></td>
+                    <td><input type="text" class="bg-blue-50 font-bold grand-row-total-amount" placeholder="0"><span class="validation-note"></span></td>
                 </tr>`;
             });
 
             html += `
                 <tr class="bg-total footer-total-row">
                     <td class="sticky-col">ยอดรวม</td>
-                    ${createFooterInputCells(12)}
-                    ${createFooterInputCells(2)}
-                    ${createFooterInputCells(4)}
-                    ${createFooterInputCells(2)}
-                    ${createFooterInputCells(2)}
+                    ${createFooterInputCells(22)}
                 </tr>
-            </tbody>
-            </table>
-            </div>`;
+            </tbody></table></div>`;
             return html;
         }
 
         function createInputCells(count, customClass = '') {
             let cells = '';
             for (let i = 0; i < count; i++) {
-                cells += `<td><input type="text" placeholder="0" class="data-cell ${customClass}" oninput="validateAllData()"></td>`;
+                cells += `<td><input type="text" class="data-cell ${customClass}" placeholder="0" oninput="validateAllData()"></td>`;
             }
             return cells;
         }
@@ -326,21 +406,17 @@
         function createFooterInputCells(count) {
             let cells = '';
             for (let i = 0; i < count; i++) {
-                cells += `
-                <td>
-                    <input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()">
-                    <span class="validation-note footer-note"></span>
-                </td>`;
+                cells += `<td><input type="text" class="font-bold footer-sum-input" placeholder="0" oninput="validateAllData()"><span class="validation-note"></span></td>`;
             }
             return cells;
         }
 
         function validateAllData() {
-            validateSummaryTable();
-            validateTableBodyAndFooter();
+            const subCalcs = validateTableBodyAndFooter();
+            validateSummaryTable(subCalcs);
         }
 
-        function validateSummaryTable() {
+        function validateSummaryTable(subCalcs) {
             const table = document.getElementById('summaryTable');
             const dataRows = table.querySelectorAll('.summary-data-row');
             const footerRow = table.querySelector('.summary-footer-row');
@@ -349,108 +425,122 @@
 
             let columnSums = new Array(7).fill(0);
 
-            dataRows.forEach((row, rIdx) => {
-                const inputs = Array.from(row.querySelectorAll('input'));
-                
-                let globalQtySum = 0;
-                if (rIdx === 0) { // สมาชิก
-                    document.querySelectorAll('.member-row-total-qty').forEach(i => globalQtySum += parseFloat(i.value.replace(/,/g, '')) || 0);
-                } else { // ไม่ใช่สมาชิก
-                    document.querySelectorAll('.non-member-row-total-qty').forEach(i => globalQtySum += parseFloat(i.value.replace(/,/g, '')) || 0);
-                }
-                updateValidationUI(inputs[0], inputs[0].nextElementSibling, globalQtySum);
+            dataRows.forEach((row) => {
+                const type = row.dataset.type;
+                const targetSum = type === 'member' ? subCalcs.mTotalQty : subCalcs.nmTotalQty;
+                const targetAmt = type === 'member' ? subCalcs.mTotalAmt : subCalcs.nmTotalAmt;
 
-                const amtSources = Array.from(row.querySelectorAll('.sum-amt-source'));
+                const qtyInput = row.querySelector('.summary-qty-input');
+                updateValidationUI(qtyInput, qtyInput.nextElementSibling, targetSum);
+
+                const tollInput = row.querySelector('.summary-toll-input');
+                updateValidationUI(tollInput, tollInput.nextElementSibling, targetAmt, true);
+
+                const amtSources = row.querySelectorAll('.sum-amt-source');
                 const totalAmtInput = row.querySelector('.summary-row-total-amt');
-                let rowAmtSum = 0;
-                amtSources.forEach(input => rowAmtSum += parseFloat(input.value.replace(/,/g, '')) || 0);
-                updateValidationUI(totalAmtInput, totalAmtInput.nextElementSibling, rowAmtSum, true);
+                let rowSum = 0;
+                amtSources.forEach(i => rowSum += parseVal(i.value));
+                updateValidationUI(totalAmtInput, totalAmtInput.nextElementSibling, rowSum, true);
 
-                inputs.forEach((input, cIdx) => {
-                    columnSums[cIdx] += parseFloat(input.value.replace(/,/g, '')) || 0;
+                row.querySelectorAll('input').forEach((input, cIdx) => {
+                    columnSums[cIdx] += parseVal(input.value);
                 });
             });
 
             footerInputs.forEach((input, cIdx) => {
-                const isAmtCol = cIdx >= 2; 
-                updateValidationUI(input, footerNotes[cIdx], columnSums[cIdx], isAmtCol);
+                updateValidationUI(input, footerNotes[cIdx], columnSums[cIdx], cIdx >= 2);
             });
         }
 
         function validateTableBodyAndFooter() {
             const tables = document.querySelectorAll('.data-table');
-            
-            tables.forEach(table => {
-                const rows = Array.from(table.querySelectorAll('.data-row'));
-                const footerRow = table.querySelector('.footer-total-row');
-                const footerInputs = Array.from(footerRow.querySelectorAll('.footer-sum-input'));
-                const footerNotes = Array.from(footerRow.querySelectorAll('.footer-note'));
+            let mTotalQty = 0, nmTotalQty = 0, mTotalAmt = 0, nmTotalAmt = 0;
 
-                let columnSums = new Array(footerInputs.length).fill(0);
+            tables.forEach(table => {
+                const rows = table.querySelectorAll('.data-row');
+                const footerInputs = table.querySelectorAll('.footer-total-row .footer-sum-input');
+                const footerNotes = table.querySelectorAll('.footer-total-row .validation-note');
+                let colSums = new Array(22).fill(0);
 
                 rows.forEach(row => {
-                    const rowInputs = Array.from(row.querySelectorAll('input'));
-                    
-                    const memberCells = Array.from(row.querySelectorAll('.member-c-group'));
+                    const mCells = row.querySelectorAll('.member-c-group');
+                    const nmCells = row.querySelectorAll('.non-member-c-group');
+                    const mCal = calculateGroup(mCells);
+                    const nmCal = calculateGroup(nmCells);
+
                     const mQtyInput = row.querySelector('.member-row-total-qty');
                     const mAmtInput = row.querySelector('.member-row-total-amount');
-                    const mCalcs = calculateGroup(memberCells);
-                    updateValidationUI(mQtyInput, mQtyInput.nextElementSibling, mCalcs.qty);
-                    updateValidationUI(mAmtInput, mAmtInput.nextElementSibling, mCalcs.amount, true);
-
-                    const nonMemberCells = Array.from(row.querySelectorAll('.non-member-c-group'));
                     const nmQtyInput = row.querySelector('.non-member-row-total-qty');
                     const nmAmtInput = row.querySelector('.non-member-row-total-amount');
-                    const nmCalcs = calculateGroup(nonMemberCells);
-                    updateValidationUI(nmQtyInput, nmQtyInput.nextElementSibling, nmCalcs.qty);
-                    updateValidationUI(nmAmtInput, nmAmtInput.nextElementSibling, nmCalcs.amount, true);
+
+                    updateValidationUI(mQtyInput, mQtyInput.nextElementSibling, mCal.qty);
+                    updateValidationUI(mAmtInput, mAmtInput.nextElementSibling, mCal.amt, true);
+                    updateValidationUI(nmQtyInput, nmQtyInput.nextElementSibling, nmCal.qty);
+                    updateValidationUI(nmAmtInput, nmAmtInput.nextElementSibling, nmCal.amt, true);
 
                     const grandQtyInput = row.querySelector('.grand-row-total-qty');
                     const grandAmtInput = row.querySelector('.grand-row-total-amount');
-                    updateValidationUI(grandQtyInput, grandQtyInput.nextElementSibling, mCalcs.qty + nmCalcs.qty);
-                    updateValidationUI(grandAmtInput, grandAmtInput.nextElementSibling, mCalcs.amount + nmCalcs.amount, true);
+                    updateValidationUI(grandQtyInput, grandQtyInput.nextElementSibling, mCal.qty + nmCal.qty);
+                    updateValidationUI(grandAmtInput, grandAmtInput.nextElementSibling, mCal.amt + nmCal.amt, true);
 
-                    rowInputs.forEach((input, idx) => {
-                        columnSums[idx] += parseFloat(input.value.replace(/,/g, '')) || 0;
+                    mTotalQty += mCal.qty; nmTotalQty += nmCal.qty;
+                    mTotalAmt += mCal.amt; nmTotalAmt += nmCal.amt;
+
+                    row.querySelectorAll('input').forEach((input, idx) => {
+                        colSums[idx] += parseVal(input.value);
                     });
                 });
 
-                footerInputs.forEach((input, idx) => {
-                    const isAmtCol = [13, 19, 21].includes(idx); 
-                    updateValidationUI(input, footerNotes[idx], columnSums[idx], isAmtCol);
+                footerInputs.forEach((input, cIdx) => {
+                    const isAmtCol = [13, 19, 21].includes(cIdx);
+                    updateValidationUI(input, footerNotes[cIdx], colSums[cIdx], isAmtCol);
                 });
             });
+
+            return { mTotalQty, nmTotalQty, mTotalAmt, nmTotalAmt };
         }
 
         function calculateGroup(cells) {
-            let qty = 0;
-            let amount = 0;
-            cells.forEach((cell, index) => {
-                const val = parseFloat(cell.value.replace(/,/g, '')) || 0;
+            let qty = 0, amt = 0;
+            cells.forEach((cell, i) => {
+                const val = parseVal(cell.value);
                 qty += val;
-                const cIndex = index % 4; 
-                if (cIndex === 0) amount += val * RATES.C1;
-                else if (cIndex === 1) amount += val * RATES.C2;
-                else if (cIndex === 2) amount += val * RATES.C3;
-                else if (cIndex === 3) amount += val * RATES.C4;
+                const cIdx = i % 4; 
+                if (cIdx === 0) amt += val * 30;
+                else if (cIdx === 1) amt += val * 50;
+                else if (cIdx === 2) amt += val * 70;
             });
-            return { qty, amount };
+            return { qty, amt };
         }
 
-        function updateValidationUI(input, note, currentSum, isAmount = false) {
+        function updateValidationUI(input, note, correctValue, isAmt = false) {
             if (!input || !note) return;
-            const targetValue = parseFloat(input.value.replace(/,/g, '')) || 0;
-            const label = isAmount ? 'ยอด' : 'รวม';
+            const enteredValue = parseVal(input.value);
+            const cell = input.parentElement;
 
-            if (targetValue > 0 && Math.abs(currentSum - targetValue) < 0.01) {
-                input.classList.add('valid-success');
-                note.innerHTML = `(ถูก: ${currentSum.toLocaleString()})`;
-                note.style.color = '#16a34a';
+            // ล้างสถานะเก่าออกก่อน
+            cell.classList.remove('valid-success-bg', 'valid-error-bg');
+            input.classList.remove('valid-success-text', 'valid-error-text');
+
+            if (enteredValue > 0 && Math.abs(enteredValue - correctValue) < 0.01) {
+                // กรณีถูกต้อง
+                cell.classList.add('valid-success-bg');
+                input.classList.add('valid-success-text');
+                note.innerHTML = `(ถูกต้อง: ${correctValue.toLocaleString()})`;
+                note.className = 'validation-note note-success';
             } else {
-                input.classList.remove('valid-success');
-                if (currentSum > 0 || targetValue > 0) {
-                    note.innerHTML = `(${label}: ${currentSum.toLocaleString()})`;
-                    note.style.color = '#64748b';
+                if (enteredValue > 0 || correctValue > 0) {
+                    if (Math.abs(enteredValue - correctValue) > 0.01 && enteredValue > 0) {
+                        // กรณีผิด (กะพริบสีแดงแรงขึ้น)
+                        cell.classList.add('valid-error-bg');
+                        input.classList.add('valid-error-text');
+                        note.innerHTML = `(ผิดตอนนี้รวมยอดได้: ${correctValue.toLocaleString()})`;
+                        note.className = 'validation-note note-error';
+                    } else {
+                        // กรณีช่องยังว่างแต่มีผลรวมจากจุดอื่น
+                        note.innerHTML = `(ผลรวม: ${correctValue.toLocaleString()})`;
+                        note.className = 'validation-note text-slate-400';
+                    }
                 } else {
                     note.innerHTML = '';
                 }
@@ -460,7 +550,6 @@
         function render() {
             const container = document.getElementById('tablesContainer');
             container.innerHTML = sections.map(s => createTable(s)).join('');
-            
             document.querySelectorAll('input').forEach(input => {
                 input.addEventListener('paste', handlePaste);
             });
@@ -476,14 +565,22 @@
             let startIdx = allInputsInRow.indexOf(currentInput);
 
             rows.forEach((rowText, rIdx) => {
-                const values = rowText.split(/\t/).map(v => v.trim()).filter(v => v !== '');
-                const targetRow = rIdx === 0 ? currentRow : getNextRow(currentRow, rIdx);
-                if (!targetRow || values.length === 0) return;
+                const values = rowText.split(/\t/)
+                    .map(v => v.trim())
+                    .filter(v => v !== ""); 
 
+                if (values.length === 0) return; 
+
+                const targetRow = rIdx === 0 ? currentRow : getNextRow(currentRow, rIdx);
+                if (!targetRow) return;
+                
                 const inputs = targetRow.querySelectorAll('input');
+                
                 values.forEach((val, vIdx) => {
                     const targetInput = inputs[startIdx + vIdx];
-                    if (targetInput) targetInput.value = val;
+                    if (targetInput) {
+                        targetInput.value = val;
+                    }
                 });
             });
             validateAllData();
@@ -491,20 +588,34 @@
 
         function getNextRow(row, offset) {
             let next = row;
-            for (let i = 0; i < offset; i++) {
-                if (next) next = next.nextElementSibling;
-            }
+            for (let i = 0; i < offset; i++) if (next) next = next.nextElementSibling;
             return next;
         }
 
-        function resetAll() {
-            if(confirm('คุณต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?')) {
-                document.querySelectorAll('input').forEach(i => i.value = '');
-                validateAllData();
-            }
+        // Custom Modal Logic
+        function openModal() {
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+        }
+
+        function confirmReset() {
+            document.querySelectorAll('input').forEach(i => i.value = '');
+            validateAllData();
+            closeModal();
         }
 
         window.onload = render;
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 </html>
