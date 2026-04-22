@@ -14,7 +14,6 @@
             color: #334155;
         }
 
-        /* ตกแต่งหัวข้อใหม่ */
         .header-title {
             font-size: 1.5rem;
             font-weight: 700;
@@ -54,6 +53,7 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             margin-bottom: 2rem;
             overflow-x: auto;
+            position: relative;
         }
 
         table {
@@ -80,7 +80,28 @@
             background-color: #e2e8f0;
             font-weight: 700;
             font-size: 14px;
-            height: 40px;
+            height: 44px;
+            position: relative;
+        }
+
+        .btn-clear-section {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fee2e2;
+            color: #dc2626;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #fecaca;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-clear-section:hover {
+            background: #fecaca;
         }
 
         .bg-sub-header {
@@ -122,17 +143,16 @@
             font-weight: 700 !important;
         }
 
-        /* สถานะแจ้งเตือนเมื่อข้อมูลผิด (ปรับปรุงเอฟเฟกต์กะพริบให้แรงขึ้น) */
+        /* สถานะแจ้งเตือนเมื่อข้อมูลผิด */
         @keyframes pulse-red-alert {
             0% { background-color: #fee2e2; }
-            50% { background-color: #fca5a5; } /* สีแดงที่ชัดขึ้น */
+            50% { background-color: #fca5a5; }
             100% { background-color: #fee2e2; }
         }
         
         .valid-error-bg {
             animation: pulse-red-alert 0.8s infinite ease-in-out !important;
             border: 2px solid #ef4444 !important;
-            box-shadow: inset 0 0 4px rgba(239, 68, 68, 0.4);
         }
         
         .valid-error-text {
@@ -140,7 +160,6 @@
             font-weight: 800 !important;
         }
 
-        /* หมายเหตุการตรวจสอบ */
         .validation-note {
             font-size: 10px;
             display: block;
@@ -168,7 +187,6 @@
             transform: scale(0.95);
         }
 
-        /* Custom Modal Styling */
         #confirmModal {
             display: none;
             position: fixed;
@@ -178,7 +196,6 @@
             justify-content: center;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
-            transition: all 0.3s ease;
         }
 
         .modal-content {
@@ -189,16 +206,10 @@
             max-width: 400px;
             width: 90%;
             text-align: center;
-            transform: scale(0.9);
-            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         #confirmModal.active {
             display: flex;
-        }
-
-        #confirmModal.active .modal-content {
-            transform: scale(1);
         }
 
         @media print {
@@ -210,6 +221,7 @@
                 -webkit-text-fill-color: #1d4ed8; 
                 background: none;
             }
+            .btn-clear-section { display: none; }
         }
     </style>
 </head>
@@ -223,13 +235,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">ยืนยันการล้างข้อมูล?</h3>
-            <p class="text-slate-500 mb-8">ข้อมูลทั้งหมดที่คุณกรอกจะถูกลบและไม่สามารถกู้คืนได้ คุณแน่ใจหรือไม่ที่จะดำเนินการต่อ?</p>
+            <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-2">ยืนยันการล้างข้อมูล?</h3>
+            <p id="modalDesc" class="text-slate-500 mb-8">ข้อมูลในส่วนที่เลือกจะถูกลบและไม่สามารถกู้คืนได้</p>
             <div class="flex gap-3">
                 <button onclick="closeModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-lg font-semibold hover:bg-slate-200 transition-colors">
                     ยกเลิก
                 </button>
-                <button onclick="confirmReset()" class="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">
+                <button id="confirmBtn" class="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">
                     ยืนยันลบข้อมูล
                 </button>
             </div>
@@ -245,11 +257,17 @@
         </header>
 
         <!-- ตารางที่ 1: สรุปหนี้ -->
-        <div class="table-wrapper">
+        <div class="table-wrapper" id="section-summary">
             <table id="summaryTable">
                 <thead>
+                    <tr>
+                        <th colspan="8" class="bg-section-header">
+                            ตารางที่ 1: สรุปยอดเงินและรายการ
+                            <button onclick="openModal('summary')" class="btn-clear-section no-print">ล้างตาราง 1</button>
+                        </th>
+                    </tr>
                     <tr class="bg-sub-header">
-                        <th class="w-40">ตารางที่ 1</th>
+                        <th class="w-40">รายการสรุป</th>
                         <th>จำนวนรายการ</th>
                         <th>จำนวนใบแจ้งหนี้</th>
                         <th>ค่าผ่านทาง</th>
@@ -312,14 +330,13 @@
             </table>
         </div>
 
-        <!-- พื้นที่สำหรับตารางที่ 2-5 -->
         <div id="tablesContainer"></div>
 
         <div class="flex justify-center gap-4 mt-8 no-print pb-10">
             <button onclick="window.print()" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 btn-action shadow-md">
                 พิมพ์รายงาน (PDF)
             </button>
-            <button onclick="openModal()" class="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 btn-action">
+            <button onclick="openModal('all')" class="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 btn-action">
                 ล้างข้อมูลทั้งหมด
             </button>
         </div>
@@ -333,7 +350,7 @@
             { title: "ตารางที่ 5: ระหว่างดำเนินการชำระ (รายการ)", id: "processing", rows: ["ยอดรวมทุกช่องทาง"] }
         ];
 
-        const RATES = { C1: 30, C2: 50, C3: 70, C4: 0 };
+        let pendingClearType = 'all';
 
         function parseVal(val) {
             if (typeof val !== 'string') val = String(val || '');
@@ -343,10 +360,15 @@
 
         function createTable(section) {
             let html = `
-            <div class="table-wrapper">
+            <div class="table-wrapper" id="section-${section.id}">
                 <table class="data-table" id="table-${section.id}">
                     <thead>
-                        <tr><th colspan="23" class="bg-section-header">${section.title}</th></tr>
+                        <tr>
+                            <th colspan="23" class="bg-section-header">
+                                ${section.title}
+                                <button onclick="openModal('${section.id}')" class="btn-clear-section no-print">ล้างตารางนี้</button>
+                            </th>
+                        </tr>
                         <tr>
                             <th rowspan="4" class="sticky-col">ช่องทางการชำระเงิน</th>
                             <th colspan="14" class="bg-sub-header">สมาชิก</th>
@@ -518,12 +540,10 @@
             const enteredValue = parseVal(input.value);
             const cell = input.parentElement;
 
-            // ล้างสถานะเก่าออกก่อน
             cell.classList.remove('valid-success-bg', 'valid-error-bg');
             input.classList.remove('valid-success-text', 'valid-error-text');
 
             if (enteredValue > 0 && Math.abs(enteredValue - correctValue) < 0.01) {
-                // กรณีถูกต้อง
                 cell.classList.add('valid-success-bg');
                 input.classList.add('valid-success-text');
                 note.innerHTML = `(ถูกต้อง: ${correctValue.toLocaleString()})`;
@@ -531,13 +551,11 @@
             } else {
                 if (enteredValue > 0 || correctValue > 0) {
                     if (Math.abs(enteredValue - correctValue) > 0.01 && enteredValue > 0) {
-                        // กรณีผิด (กะพริบสีแดงแรงขึ้น)
                         cell.classList.add('valid-error-bg');
                         input.classList.add('valid-error-text');
-                        note.innerHTML = `(ผิดตอนนี้รวมยอดได้: ${correctValue.toLocaleString()})`;
+                        note.innerHTML = `(ผิดรวมได้: ${correctValue.toLocaleString()})`;
                         note.className = 'validation-note note-error';
                     } else {
-                        // กรณีช่องยังว่างแต่มีผลรวมจากจุดอื่น
                         note.innerHTML = `(ผลรวม: ${correctValue.toLocaleString()})`;
                         note.className = 'validation-note text-slate-400';
                     }
@@ -545,14 +563,6 @@
                     note.innerHTML = '';
                 }
             }
-        }
-
-        function render() {
-            const container = document.getElementById('tablesContainer');
-            container.innerHTML = sections.map(s => createTable(s)).join('');
-            document.querySelectorAll('input').forEach(input => {
-                input.addEventListener('paste', handlePaste);
-            });
         }
 
         function handlePaste(e) {
@@ -565,22 +575,16 @@
             let startIdx = allInputsInRow.indexOf(currentInput);
 
             rows.forEach((rowText, rIdx) => {
-                const values = rowText.split(/\t/)
-                    .map(v => v.trim())
-                    .filter(v => v !== ""); 
-
+                const values = rowText.split(/\t/).map(v => v.trim()).filter(v => v !== ""); 
                 if (values.length === 0) return; 
 
                 const targetRow = rIdx === 0 ? currentRow : getNextRow(currentRow, rIdx);
                 if (!targetRow) return;
                 
                 const inputs = targetRow.querySelectorAll('input');
-                
                 values.forEach((val, vIdx) => {
                     const targetInput = inputs[startIdx + vIdx];
-                    if (targetInput) {
-                        targetInput.value = val;
-                    }
+                    if (targetInput) targetInput.value = val;
                 });
             });
             validateAllData();
@@ -592,9 +596,27 @@
             return next;
         }
 
-        // Custom Modal Logic
-        function openModal() {
-            document.getElementById('confirmModal').classList.add('active');
+        // Modal Controls
+        function openModal(type) {
+            pendingClearType = type;
+            const modal = document.getElementById('confirmModal');
+            const title = document.getElementById('modalTitle');
+            const desc = document.getElementById('modalDesc');
+            
+            if (type === 'all') {
+                title.innerText = "ล้างข้อมูลทั้งหมด?";
+                desc.innerText = "ข้อมูลในตารางทั้งหมด (1-5) จะถูกลบออกทั้งหมด";
+            } else if (type === 'summary') {
+                title.innerText = "ล้างข้อมูลตารางที่ 1?";
+                desc.innerText = "เฉพาะข้อมูลในตารางที่ 1 (สรุปยอดเงิน) จะถูกลบออก";
+            } else {
+                const section = sections.find(s => s.id === type);
+                title.innerText = `ล้างข้อมูล${section.title}?`;
+                desc.innerText = "ข้อมูลในตารางนี้จะถูกลบออกโดยไม่กระทบตารางอื่น";
+            }
+            
+            modal.classList.add('active');
+            document.getElementById('confirmBtn').onclick = confirmReset;
         }
 
         function closeModal() {
@@ -602,20 +624,29 @@
         }
 
         function confirmReset() {
-            document.querySelectorAll('input').forEach(i => i.value = '');
+            if (pendingClearType === 'all') {
+                document.querySelectorAll('input').forEach(i => i.value = '');
+            } else {
+                const containerId = `section-${pendingClearType}`;
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.querySelectorAll('input').forEach(i => i.value = '');
+                }
+            }
             validateAllData();
             closeModal();
         }
 
-        window.onload = render;
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('confirmModal');
-            if (event.target == modal) {
-                closeModal();
-            }
+        function render() {
+            const container = document.getElementById('tablesContainer');
+            container.innerHTML = sections.map(s => createTable(s)).join('');
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('paste', handlePaste);
+            });
         }
+
+        window.onload = render;
+        window.onclick = e => { if (e.target == document.getElementById('confirmModal')) closeModal(); }
     </script>
 </body>
 </html>
