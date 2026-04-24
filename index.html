@@ -3,650 +3,688 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>M-Flow Multi-Section Report System</title>
+    <title>รายงาน R11 M-Flow - Validation Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap');
         
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: #f1f5f9;
-            color: #334155;
+        body { font-family: 'Sarabun', sans-serif; background-color: #f4f7f6; }
+        
+        /* สไตล์ตารางหลัก */
+        table { border-collapse: collapse; width: 100%; font-size: 0.75rem; table-layout: auto; border: 1px solid #000; }
+        th, td { border: 1px solid #000; padding: 4px 2px; text-align: center; position: relative; transition: all 0.2s; }
+        th { background-color: #e5e7eb; font-weight: 600; color: #374151; }
+        
+        /* สไตล์พิเศษสำหรับหน้าสรุปรายงานสะสม (Cumulative) */
+        .cum-table-style { 
+            table-layout: auto !important; 
+            width: max-content !important; 
+            min-width: 100%; 
+        }
+        
+        .cum-table-style td, .cum-table-style th {
+            white-space: nowrap;
+            padding: 4px 3px; /* ลด padding เพื่อให้ตารางแคบลง */
         }
 
-        .header-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e293b;
+        /* ปรับขนาดช่องตัวเลขหน้าสะสมให้กระชับขึ้น (ลดจาก 65px เหลือ 58px) */
+        .num-input-cum { 
+            background-color: #f0f9ff; 
+            cursor: default; 
+            min-width: 58px !important; 
+            font-size: 0.8rem;
+        }
+
+        .table-main-title {
+            background-color: #d1d5db;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 10px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
         }
 
-        .highlight-mflow {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 2rem;
-            font-weight: 800;
-            filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.2));
-            letter-spacing: -0.02em;
+        .row-label { background-color: #f9fafb; text-align: left; font-weight: 600; padding-left: 8px; min-width: 140px; }
+        
+        input { width: 100%; border: none; background: transparent; text-align: center; outline: none; padding: 4px; font-size: 0.85rem; font-weight: 600; position: relative; z-index: 5; }
+        input:focus { background-color: #fef3c7; border-radius: 2px; }
+        
+        .val-hint {
+            display: block; font-size: 0.7rem; font-weight: 800; line-height: 1.1; margin-top: 1px; position: relative; z-index: 5; text-shadow: 0px 0px 1px rgba(255,255,255,0.8); min-height: 12px;
+        }
+
+        /* Styling for M-Flow Title based on image */
+        .mflow-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            font-style: italic;
+            display: inline-block;
+            letter-spacing: -1px;
             position: relative;
+            color: #00338d; /* Dark Blue */
+            text-shadow: 1px 1px 0px #fff, 3px 3px 0px rgba(0,0,0,0.1);
         }
-
-        .highlight-mflow::after {
-            content: '';
+        
+        .mflow-title::before {
+            content: "";
             position: absolute;
-            bottom: -2px;
+            top: -5px;
             left: 0;
             width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #2563eb, transparent);
+            height: 4px;
+            background: #ee2e24; /* Red accent line */
             border-radius: 2px;
         }
 
-        .table-wrapper {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            margin-bottom: 2rem;
-            overflow-x: auto;
-            position: relative;
+        @keyframes continuous-shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            table-layout: fixed;
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
         }
 
-        th, td {
-            border: 1px solid #cbd5e1;
-            text-align: center;
-            vertical-align: middle;
-            padding: 4px 2px;
+        @keyframes modal-pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        th {
-            background-color: #f8fafc;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-
-        .bg-section-header {
-            background-color: #e2e8f0;
-            font-weight: 700;
-            font-size: 14px;
-            height: 44px;
-            position: relative;
-        }
-
-        .btn-clear-section {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #fee2e2;
-            color: #dc2626;
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #fecaca;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .btn-clear-section:hover {
-            background: #fecaca;
-        }
-
-        .bg-sub-header {
-            background-color: #f1f5f9;
-        }
-
-        .bg-total {
-            background-color: #f8fafc;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            border: none;
-            outline: none;
-            text-align: center;
-            background: transparent;
-            padding: 4px 0;
-            transition: all 0.2s;
-        }
-
-        .sticky-col {
-            position: sticky;
-            left: 0;
-            background: white;
-            z-index: 10;
-            width: 130px !important;
-            text-align: left !important;
-            padding-left: 8px !important;
-            border-right: 2px solid #cbd5e1;
-        }
-
-        /* สถานะข้อมูลถูกต้อง */
-        .valid-success-bg {
-            background-color: #dcfce7 !important; 
-        }
-        .valid-success-text {
-            color: #15803d !important; 
-            font-weight: 700 !important;
-        }
-
-        /* สถานะแจ้งเตือนเมื่อข้อมูลผิด */
-        @keyframes pulse-red-alert {
-            0% { background-color: #fee2e2; }
-            50% { background-color: #fca5a5; }
-            100% { background-color: #fee2e2; }
+        td.status-correct { background-color: #dcfce7 !important; border: 2px solid #16a34a !important; }
+        td.status-incorrect { 
+            background-color: #fee2e2 !important; 
+            border: 2px solid #dc2626 !important; 
+            animation: continuous-shake 0.6s ease-in-out infinite, pulse-red 1.5s infinite;
+            z-index: 20;
         }
         
-        .valid-error-bg {
-            animation: pulse-red-alert 0.8s infinite ease-in-out !important;
-            border: 2px solid #ef4444 !important;
-        }
+        .table-container { background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1rem; margin-bottom: 2rem; overflow-x: auto; }
         
-        .valid-error-text {
-            color: #b91c1c !important;
-            font-weight: 800 !important;
+        .tab-btn { padding: 12px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; transition: all 0.3s; }
+        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; background-color: white; }
+
+        .btn-clear-table {
+            font-size: 0.7rem; background-color: #ef4444; color: white; padding: 4px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s;
         }
 
-        .validation-note {
-            font-size: 10px;
-            display: block;
-            margin-top: 2px;
-            line-height: 1.1;
+        .btn-copy-table {
+            font-size: 0.7rem; background-color: #4b5563; color: white; padding: 4px 10px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s;
         }
+        .btn-copy-table:hover { background-color: #1f2937; }
+
+        .modal-overlay {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card { 
+            background: white; padding: 2rem; border-radius: 20px; max-width: 450px; width: 90%; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: modal-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-icon-container {
+            width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;
+        }
+        .icon-warning { background: #fff7ed; color: #f97316; border: 4px solid #ffedd5; }
+        .icon-danger { background: #fef2f2; color: #ef4444; border: 4px solid #fee2e2; }
+        .icon-info { background: #eff6ff; color: #3b82f6; border: 4px solid #dbeafe; }
+
+        .counter-badge { background: #3b82f6; color: white; padding: 2px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; }
         
-        .note-error {
-            color: #dc2626; 
-            font-weight: 800;
-            text-decoration: underline;
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #1f2937; color: #fff; text-align: center; border-radius: 12px;
+            padding: 16px; position: fixed; z-index: 2000; left: 50%; transform: translateX(-50%); bottom: 30px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
-        
-        .note-success {
-            color: #15803d; 
-            font-weight: 700;
-        }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
 
-        .btn-action {
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        
-        .btn-action:active {
-            transform: scale(0.95);
-        }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-        #confirmModal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-
-        #confirmModal.active {
-            display: flex;
-        }
-
-        @media print {
-            .no-print { display: none; }
-            body { background: white; padding: 0; }
-            .table-wrapper { box-shadow: none; margin-bottom: 1rem; }
-            .header-title { color: black; }
-            .highlight-mflow { 
-                -webkit-text-fill-color: #1d4ed8; 
-                background: none;
-            }
-            .btn-clear-section { display: none; }
-        }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 bg-slate-50">
 
-    <!-- Custom Confirmation Modal -->
-    <div id="confirmModal" class="no-print">
-        <div class="modal-content">
-            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    <div id="toast">บันทึกสำเร็จ!</div>
+
+    <!-- Smart Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div id="modal-icon-box" class="modal-icon-container">
+                <svg id="icon-svg" xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path id="icon-path" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
-            <h3 id="modalTitle" class="text-xl font-bold text-slate-800 mb-2">ยืนยันการล้างข้อมูล?</h3>
-            <p id="modalDesc" class="text-slate-500 mb-8">ข้อมูลในส่วนที่เลือกจะถูกลบและไม่สามารถกู้คืนได้</p>
+            <h3 id="modal-title" class="text-2xl font-bold mb-2 text-gray-800">ยืนยัน?</h3>
+            <p id="modal-desc" class="text-gray-500 mb-8 leading-relaxed"></p>
             <div class="flex gap-3">
-                <button onclick="closeModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-lg font-semibold hover:bg-slate-200 transition-colors">
-                    ยกเลิก
-                </button>
-                <button id="confirmBtn" class="flex-1 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">
-                    ยืนยันลบข้อมูล
-                </button>
+                <button id="modal-cancel-btn" onclick="closeConfirmModal()" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition active:scale-95">ยกเลิก</button>
+                <button id="modal-confirm-btn" class="flex-1 px-6 py-3 text-white rounded-xl font-bold shadow-lg transition active:scale-95">ยืนยัน</button>
             </div>
         </div>
     </div>
 
-    <div class="max-w-[1900px] mx-auto">
-        <header class="mb-8 text-center no-print">
-            <h1 class="header-title">
-                ระบบตรวจสอบข้อมูลรายงาน <span class="highlight-mflow">M-Flow R11</span>
-            </h1>
-            <p class="text-slate-500 italic mt-2">ระบบตรวจสอบอัตโนมัติ: สีเขียว = ถูกต้อง, <span class="text-red-600 font-bold">สีแดงกะพริบ = ข้อมูลผิดพลาด</span></p>
-        </header>
-
-        <!-- ตารางที่ 1: สรุปหนี้ -->
-        <div class="table-wrapper" id="section-summary">
-            <table id="summaryTable">
-                <thead>
-                    <tr>
-                        <th colspan="8" class="bg-section-header">
-                            ตารางที่ 1: สรุปยอดเงินและรายการ
-                            <button onclick="openModal('summary')" class="btn-clear-section no-print">ล้างตาราง 1</button>
-                        </th>
-                    </tr>
-                    <tr class="bg-sub-header">
-                        <th class="w-40">รายการสรุป</th>
-                        <th>จำนวนรายการ</th>
-                        <th>จำนวนใบแจ้งหนี้</th>
-                        <th>ค่าผ่านทาง</th>
-                        <th>ค่าเสียหาย 2 เท่า</th>
-                        <th>ค่าปรับ 10 เท่า</th>
-                        <th>ค่าปรับ 200 บาท</th>
-                        <th>ยอดเงินใบแจ้งหนี้รวม</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="summary-data-row" data-type="member">
-                        <td class="font-bold bg-slate-50 text-left px-4">สมาชิก</td>
-                        <td>
-                            <input type="text" class="summary-qty-input" placeholder="0" oninput="validateAllData()">
-                            <span class="validation-note"></span>
-                        </td>
-                        <td><input type="text" placeholder="0" oninput="validateAllData()"></td>
-                        <td>
-                            <input type="text" class="summary-toll-input sum-amt-source" placeholder="0" oninput="validateAllData()">
-                            <span class="validation-note"></span>
-                        </td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
-                        <td>
-                            <input type="text" class="font-bold summary-row-total-amt" placeholder="0" oninput="validateAllData()">
-                            <span class="validation-note"></span>
-                        </td>
-                    </tr>
-                    <tr class="summary-data-row" data-type="non-member">
-                        <td class="font-bold bg-slate-50 text-left px-4">ไม่ใช่สมาชิก</td>
-                        <td>
-                            <input type="text" class="summary-qty-input" placeholder="0" oninput="validateAllData()">
-                            <span class="validation-note"></span>
-                        </td>
-                        <td><input type="text" placeholder="0" oninput="validateAllData()"></td>
-                        <td>
-                            <input type="text" class="summary-toll-input sum-amt-source" placeholder="0" oninput="validateAllData()">
-                            <span class="validation-note"></span>
-                        </td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
-                        <td><input type="text" class="sum-amt-source" placeholder="0" oninput="validateAllData()"></td>
-                        <td>
-                            <input type="text" class="font-bold summary-row-total-amt" placeholder="0" oninput="validateAllData()">
-                            <span class="validation-note"></span>
-                        </td>
-                    </tr>
-                    <tr class="bg-total summary-footer-row">
-                        <td class="font-bold text-left px-4">รวม</td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                        <td><input type="text" placeholder="0" class="font-bold footer-sum-input" oninput="validateAllData()"><span class="validation-note"></span></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="max-w-full mx-auto">
+        <div class="flex justify-between items-center mb-6 no-print">
+            <div>
+                <h1 class="text-2xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+                    <span>รายงาน R11</span>
+                    <span class="mflow-title">M-Flow</span>
+                </h1>
+                <p class="text-sm text-gray-500">ระบบตรวจสอบและบันทึกสถิติการชำระเงินดิจิทัล</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <div class="text-[0.65rem] text-gray-400 uppercase font-bold tracking-widest">สะสมแล้ว</div>
+                    <div id="save-count-badge" class="counter-badge">0 รอบ</div>
+                </div>
+                <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
         </div>
 
-        <div id="tablesContainer"></div>
+        <div class="flex justify-center mb-6 no-print bg-white rounded-2xl shadow-sm p-1 border border-gray-100">
+            <div id="tab-verify" class="tab-btn flex-1 text-center rounded-xl active" onclick="switchTab('verify')">1. ตรวจสอบรายงานประจำวัน</div>
+            <div id="tab-cumulative" class="tab-btn flex-1 text-center rounded-xl" onclick="switchTab('cumulative')">2. สรุปรายงานสะสม (Cumulative)</div>
+        </div>
 
-        <div class="flex justify-center gap-4 mt-8 no-print pb-10">
-            <button onclick="window.print()" class="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 btn-action shadow-md">
-                พิมพ์รายงาน (PDF)
-            </button>
-            <button onclick="openModal('all')" class="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 btn-action">
-                ล้างข้อมูลทั้งหมด
-            </button>
+        <div id="page-verify" class="tab-content">
+            <div id="summary-section-verify"></div>
+            <div id="dynamic-tables-verify"></div>
+        </div>
+
+        <div id="page-cumulative" class="tab-content hidden">
+            <div id="summary-section-cum"></div>
+            <div id="dynamic-tables-cum"></div>
+        </div>
+
+        <div id="controls-section" class="flex flex-col items-center gap-6 mt-10 mb-24 no-print">
+            <div id="verify-controls" class="flex flex-col items-center gap-4 w-full">
+                <div id="error-status-msg" class="bg-red-50 text-red-600 px-6 py-3 rounded-2xl font-bold border-2 border-red-200 flex items-center gap-3 hidden">
+                    <span class="animate-ping inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
+                    พบข้อมูลผิดพลาด! โปรดแก้ไขช่องสีแดงให้ถูกต้อง
+                </div>
+                
+                <button id="main-save-btn" onclick="handleSaveActionWithVerification()" class="bg-emerald-600 text-white px-12 py-5 rounded-2xl shadow-xl hover:bg-emerald-700 hover:shadow-emerald-200 transition-all font-bold text-xl min-w-[320px] active:scale-95 flex items-center justify-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                    บันทึกยอดสะสม
+                </button>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="window.print()" class="bg-white text-gray-700 px-8 py-4 rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    พิมพ์รายงาน
+                </button>
+                <button id="btn-clear-page" onclick="handleClearCurrentPage()" class="bg-orange-500 text-white px-8 py-4 rounded-xl shadow-lg shadow-orange-100 hover:bg-orange-600 transition font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    <span>ล้างข้อมูลหน้าปัจจุบัน</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        const sections = [
-            { title: "ตารางที่ 2: ชำระเงินสำเร็จ (รายการ)", id: "success", rows: ["Counter Service", "Mobile Banking", "บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"] },
-            { title: "ตารางที่ 3: ชำระเงินไม่สำเร็จ (รายการ)", id: "failed", rows: ["บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"] },
-            { title: "ตารางที่ 4: รอดำเนินการชำระ (รายการ)", id: "pending", rows: ["บัญชีบัตร Easy Pass", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต", "ยังไม่ระบุช่องทาง", "รายการโต้แย้งที่ไม่ได้ชำระ"] },
-            { title: "ตารางที่ 5: ระหว่างดำเนินการชำระ (รายการ)", id: "processing", rows: ["ยอดรวมทุกช่องทาง"] }
-        ];
+        const CHANNELS_GENERAL = ["Counter Service", "Mobile Banking", "บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"];
+        const CHANNELS_TABLE3 = ["บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"];
+        const CHANNELS_TABLE4 = ["บัญชีบัตร Easy Pass", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต", "ยังไม่ระบุช่องทาง", "รายการโต้แย้งที่ไม่ได้ระบุช่องทาง"];
+        const CHANNELS_TABLE5 = ["บัญชีบัตร Easy Pass", "บัญชีบัตร M-PASS", "บัญชีออมทรัพย์", "บัตรเครดิต/เดบิต"];
 
-        let pendingClearType = 'all';
+        let currentTab = 'verify';
+        let saveCounter = 0;
+        let hasValidationErrors = false;
+        let savedHistory = []; 
 
-        function parseVal(val) {
-            if (typeof val !== 'string') val = String(val || '');
-            const cleaned = val.replace(/,/g, '').trim();
-            return parseFloat(cleaned) || 0;
-        }
+// === วางโค้ดส่วนนี้ (1) ===
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyF4gpfPD7-Ket7HPKNLjtX6TxPQewKmFwMkd9GZe0xPuM4aKjLqDmu4afawB2Lz4IK/exec"; 
 
-        function createTable(section) {
-            let html = `
-            <div class="table-wrapper" id="section-${section.id}">
-                <table class="data-table" id="table-${section.id}">
-                    <thead>
-                        <tr>
-                            <th colspan="23" class="bg-section-header">
-                                ${section.title}
-                                <button onclick="openModal('${section.id}')" class="btn-clear-section no-print">ล้างตารางนี้</button>
-                            </th>
-                        </tr>
-                        <tr>
-                            <th rowspan="4" class="sticky-col">ช่องทางการชำระเงิน</th>
-                            <th colspan="14" class="bg-sub-header">สมาชิก</th>
-                            <th colspan="6" class="bg-sub-header">ไม่ใช่สมาชิก</th>
-                            <th rowspan="4" class="w-16">จำนวนรายการทั้งหมด</th>
-                            <th rowspan="4" class="w-20">ยอดเงินรวมทั้งหมด (บาท)</th>
-                        </tr>
-                        <tr>
-                            <th colspan="4">บุคคลไทย</th><th colspan="4">บุคคลต่างชาติ</th><th colspan="4">นิติบุคคล</th>
-                            <th rowspan="3" class="w-12 text-[9px]">จำนวนรายการ (รวม)</th>
-                            <th rowspan="3" class="w-14 text-[9px]">ยอดเงินรวม (บาท)</th>
-                            <th colspan="4" rowspan="2">ประเภทรถ (รายการ)</th>
-                            <th rowspan="3" class="w-12 text-[9px]">จำนวนรายการ (รวม)</th>
-                            <th rowspan="3" class="w-14 text-[9px]">ยอดเงินรวม (บาท)</th>
-                        </tr>
-                        <tr>
-                            <th colspan="4">ประเภทรถ (รายการ)</th><th colspan="4">ประเภทรถ (รายการ)</th><th colspan="4">ประเภทรถ (รายการ)</th>
-                        </tr>
-                        <tr class="bg-sub-header text-[9px]">
-                            ${'<th>C1</th><th>C2</th><th>C3</th><th>C4</th>'.repeat(4)}
-                        </tr>
-                    </thead>
-                    <tbody>`;
+       // วางไว้ประมาณบรรทัดที่ 147 ต่อจาก SCRIPT_URL
+function getTableDataArray(tableId) {
+    const table = document.getElementById(tableId); 
+    if (!table) {
+        console.error("หาตารางไม่เจอ ID:", tableId);
+        return [];
+    }
+    // ดึงเฉพาะ input .num-input ของหน้าแรก และไม่เอาแถวรวม (total-row)
+    return Array.from(table.querySelectorAll('tbody tr:not(.total-row) .num-input'))
+                .map(i => unformatNumber(i.value));
+}
 
-            section.rows.forEach(rowLabel => {
-                html += `
-                <tr class="data-row">
-                    <td class="sticky-col font-medium">${rowLabel}</td>
-                    ${createInputCells(12, 'member-c-group')}
-                    <td><input type="text" class="bg-amber-50 member-row-total-qty" placeholder="0"><span class="validation-note"></span></td>
-                    <td><input type="text" class="bg-amber-50 member-row-total-amount" placeholder="0"><span class="validation-note"></span></td>
-                    ${createInputCells(4, 'non-member-c-group')} 
-                    <td><input type="text" class="bg-amber-50 non-member-row-total-qty" placeholder="0"><span class="validation-note"></span></td>
-                    <td><input type="text" class="bg-amber-50 non-member-row-total-amount" placeholder="0"><span class="validation-note"></span></td>
-                    <td><input type="text" class="bg-blue-50 font-bold grand-row-total-qty" placeholder="0"><span class="validation-note"></span></td>
-                    <td><input type="text" class="bg-blue-50 font-bold grand-row-total-amount" placeholder="0"><span class="validation-note"></span></td>
-                </tr>`;
+        function getSummaryDataArray() {
+            const rows = document.querySelectorAll('.summary-body-verify tr:not(.total-row)');
+            let data = [];
+            rows.forEach(row => {
+                const inputs = Array.from(row.querySelectorAll('.num-input'));
+                data.push(inputs.map(input => unformatNumber(input.value)));
             });
-
-            html += `
-                <tr class="bg-total footer-total-row">
-                    <td class="sticky-col">ยอดรวม</td>
-                    ${createFooterInputCells(22)}
-                </tr>
-            </tbody></table></div>`;
-            return html;
+            return data;
         }
+        // ==========================
 
-        function createInputCells(count, customClass = '') {
-            let cells = '';
-            for (let i = 0; i < count; i++) {
-                cells += `<td><input type="text" class="data-cell ${customClass}" placeholder="0" oninput="validateAllData()"></td>`;
-            }
-            return cells;
-        }
+async function fetchCloudData() {
+    try {
+        // ดึงข้อมูลจาก Google Script
+        const response = await fetch(SCRIPT_URL);
+        const cloudData = await response.json();
 
-        function createFooterInputCells(count) {
-            let cells = '';
-            for (let i = 0; i < count; i++) {
-                cells += `<td><input type="text" class="font-bold footer-sum-input" placeholder="0" oninput="validateAllData()"><span class="validation-note"></span></td>`;
-            }
-            return cells;
-        }
-
-        function validateAllData() {
-            const subCalcs = validateTableBodyAndFooter();
-            validateSummaryTable(subCalcs);
-        }
-
-        function validateSummaryTable(subCalcs) {
-            const table = document.getElementById('summaryTable');
-            const dataRows = table.querySelectorAll('.summary-data-row');
-            const footerRow = table.querySelector('.summary-footer-row');
-            const footerInputs = footerRow.querySelectorAll('.footer-sum-input');
-            const footerNotes = footerRow.querySelectorAll('.validation-note');
-
-            let columnSums = new Array(7).fill(0);
-
-            dataRows.forEach((row) => {
-                const type = row.dataset.type;
-                const targetSum = type === 'member' ? subCalcs.mTotalQty : subCalcs.nmTotalQty;
-                const targetAmt = type === 'member' ? subCalcs.mTotalAmt : subCalcs.nmTotalAmt;
-
-                const qtyInput = row.querySelector('.summary-qty-input');
-                updateValidationUI(qtyInput, qtyInput.nextElementSibling, targetSum);
-
-                const tollInput = row.querySelector('.summary-toll-input');
-                updateValidationUI(tollInput, tollInput.nextElementSibling, targetAmt, true);
-
-                const amtSources = row.querySelectorAll('.sum-amt-source');
-                const totalAmtInput = row.querySelector('.summary-row-total-amt');
-                let rowSum = 0;
-                amtSources.forEach(i => rowSum += parseVal(i.value));
-                updateValidationUI(totalAmtInput, totalAmtInput.nextElementSibling, rowSum, true);
-
-                row.querySelectorAll('input').forEach((input, cIdx) => {
-                    columnSums[cIdx] += parseVal(input.value);
-                });
-            });
-
-            footerInputs.forEach((input, cIdx) => {
-                updateValidationUI(input, footerNotes[cIdx], columnSums[cIdx], cIdx >= 2);
-            });
-        }
-
-        function validateTableBodyAndFooter() {
-            const tables = document.querySelectorAll('.data-table');
-            let mTotalQty = 0, nmTotalQty = 0, mTotalAmt = 0, nmTotalAmt = 0;
-
-            tables.forEach(table => {
-                const rows = table.querySelectorAll('.data-row');
-                const footerInputs = table.querySelectorAll('.footer-total-row .footer-sum-input');
-                const footerNotes = table.querySelectorAll('.footer-total-row .validation-note');
-                let colSums = new Array(22).fill(0);
-
-                rows.forEach(row => {
-                    const mCells = row.querySelectorAll('.member-c-group');
-                    const nmCells = row.querySelectorAll('.non-member-c-group');
-                    const mCal = calculateGroup(mCells);
-                    const nmCal = calculateGroup(nmCells);
-
-                    const mQtyInput = row.querySelector('.member-row-total-qty');
-                    const mAmtInput = row.querySelector('.member-row-total-amount');
-                    const nmQtyInput = row.querySelector('.non-member-row-total-qty');
-                    const nmAmtInput = row.querySelector('.non-member-row-total-amount');
-
-                    updateValidationUI(mQtyInput, mQtyInput.nextElementSibling, mCal.qty);
-                    updateValidationUI(mAmtInput, mAmtInput.nextElementSibling, mCal.amt, true);
-                    updateValidationUI(nmQtyInput, nmQtyInput.nextElementSibling, nmCal.qty);
-                    updateValidationUI(nmAmtInput, nmAmtInput.nextElementSibling, nmCal.amt, true);
-
-                    const grandQtyInput = row.querySelector('.grand-row-total-qty');
-                    const grandAmtInput = row.querySelector('.grand-row-total-amount');
-                    updateValidationUI(grandQtyInput, grandQtyInput.nextElementSibling, mCal.qty + nmCal.qty);
-                    updateValidationUI(grandAmtInput, grandAmtInput.nextElementSibling, mCal.amt + nmCal.amt, true);
-
-                    mTotalQty += mCal.qty; nmTotalQty += nmCal.qty;
-                    mTotalAmt += mCal.amt; nmTotalAmt += nmCal.amt;
-
-                    row.querySelectorAll('input').forEach((input, idx) => {
-                        colSums[idx] += parseVal(input.value);
+        // --- ส่วนที่ 1: อัปเดตตารางสรุป (ตารางที่ 1) ---
+        const sCumBody = document.querySelector('.summary-body-cum');
+        if (sCumBody && cloudData.summary) {
+            const rows = sCumBody.querySelectorAll('tr:not(.total-row)');
+            cloudData.summary.forEach((rowData, rIdx) => {
+                if (rows[rIdx]) {
+                    const inputs = rows[rIdx].querySelectorAll('.num-input-cum');
+                    rowData.forEach((val, iIdx) => {
+                        if (inputs[iIdx]) {
+                            // ใส่ค่าลงช่อง และฟอร์แมตตัวเลข (ทศนิยม 2 ตำแหน่งสำหรับเงิน)
+                            const isMoney = [2, 3, 4, 5, 6, 7].includes(iIdx);
+                            inputs[iIdx].value = formatNumber(val, isMoney ? 2 : 0);
+                        }
                     });
-                });
-
-                footerInputs.forEach((input, cIdx) => {
-                    const isAmtCol = [13, 19, 21].includes(cIdx);
-                    updateValidationUI(input, footerNotes[cIdx], colSums[cIdx], isAmtCol);
-                });
-            });
-
-            return { mTotalQty, nmTotalQty, mTotalAmt, nmTotalAmt };
-        }
-
-        function calculateGroup(cells) {
-            let qty = 0, amt = 0;
-            cells.forEach((cell, i) => {
-                const val = parseVal(cell.value);
-                qty += val;
-                const cIdx = i % 4; 
-                if (cIdx === 0) amt += val * 30;
-                else if (cIdx === 1) amt += val * 50;
-                else if (cIdx === 2) amt += val * 70;
-            });
-            return { qty, amt };
-        }
-
-        function updateValidationUI(input, note, correctValue, isAmt = false) {
-            if (!input || !note) return;
-            const enteredValue = parseVal(input.value);
-            const cell = input.parentElement;
-
-            cell.classList.remove('valid-success-bg', 'valid-error-bg');
-            input.classList.remove('valid-success-text', 'valid-error-text');
-
-            if (enteredValue > 0 && Math.abs(enteredValue - correctValue) < 0.01) {
-                cell.classList.add('valid-success-bg');
-                input.classList.add('valid-success-text');
-                note.innerHTML = `(ถูกต้อง: ${correctValue.toLocaleString()})`;
-                note.className = 'validation-note note-success';
-            } else {
-                if (enteredValue > 0 || correctValue > 0) {
-                    if (Math.abs(enteredValue - correctValue) > 0.01 && enteredValue > 0) {
-                        cell.classList.add('valid-error-bg');
-                        input.classList.add('valid-error-text');
-                        note.innerHTML = `(ผิดรวมได้: ${correctValue.toLocaleString()})`;
-                        note.className = 'validation-note note-error';
-                    } else {
-                        note.innerHTML = `(ผลรวม: ${correctValue.toLocaleString()})`;
-                        note.className = 'validation-note text-slate-400';
-                    }
-                } else {
-                    note.innerHTML = '';
                 }
-            }
+            });
         }
 
-        function handlePaste(e) {
-            e.preventDefault();
-            const text = e.clipboardData.getData('text');
-            const rows = text.split(/\r?\n/);
-            let currentInput = e.target;
-            let currentRow = currentInput.closest('tr');
-            let allInputsInRow = Array.from(currentRow.querySelectorAll('input'));
-            let startIdx = allInputsInRow.indexOf(currentInput);
-
-            rows.forEach((rowText, rIdx) => {
-                const values = rowText.split(/\t/).map(v => v.trim()).filter(v => v !== ""); 
-                if (values.length === 0) return; 
-
-                const targetRow = rIdx === 0 ? currentRow : getNextRow(currentRow, rIdx);
-                if (!targetRow) return;
+        // --- ส่วนที่ 2: อัปเดตตารางย่อย 2-5 (ช่องใครช่องมัน) ---
+        const tableIds = ['success', 'failed', 'pending', 'processing'];
+        tableIds.forEach(id => {
+            const table = document.getElementById(`${id}-table-cum`);
+            if (table && cloudData.tables[id]) {
+                // ดึงช่อง input ทั้งหมดในตารางนั้นๆ (เรียงลำดับตามที่ส่งมาจาก Script)
+                const allInputs = table.querySelectorAll('tbody tr:not(.total-row) .num-input-cum');
+                const dataArray = cloudData.tables[id];
                 
-                const inputs = targetRow.querySelectorAll('input');
-                values.forEach((val, vIdx) => {
-                    const targetInput = inputs[startIdx + vIdx];
-                    if (targetInput) targetInput.value = val;
+                allInputs.forEach((input, idx) => {
+                    if (dataArray[idx] !== undefined) {
+                        // ตรวจสอบว่าเป็นช่องจำนวนเงินหรือไม่ (อิงตาม placeholder .00)
+                        const isMoney = input.placeholder.includes('.00');
+                        input.value = formatNumber(dataArray[idx], isMoney ? 2 : 0);
+                    }
+                });
+            }
+        });
+
+        // สั่งให้หน้าเว็บคำนวณแถว "ยอดรวม" (แถวสีเทาด้านล่างสุด) ใหม่
+        calculateCumulativeTotals();
+        
+        showToast("🔄 อัปเดตยอดสะสมจาก Cloud เรียบร้อยแล้ว");
+    } catch (e) {
+        console.error("Cloud Fetch Error:", e);
+        showToast("⚠️ ดึงข้อมูลสะสมไม่สำเร็จ");
+    }
+}
+
+function getSummaryDataArray() {
+    const rows = document.querySelectorAll('.summary-body-verify tr:not(.total-row)');
+    return Array.from(rows).map(row => 
+        Array.from(row.querySelectorAll('.num-input')).map(i => unformatNumber(i.value))
+    );
+}
+
+function getTableDataArray(tableId) {
+    // ใช้ tableId ตรงๆ เพราะใน executeSave เราส่ง 'success-table' ไปแล้ว
+    const table = document.getElementById(tableId); 
+    if (!table) {
+        console.error("หาตารางไม่เจอ ID:", tableId);
+        return [];
+    }
+    return Array.from(table.querySelectorAll('tbody tr:not(.total-row) .num-input'))
+                .map(i => unformatNumber(i.value));
+}
+        function formatNumber(n, d = 0) {
+            if (n === 0 && d === 0) return "0";
+            if (!n && n !== 0) return "";
+            return parseFloat(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+        }
+
+        function unformatNumber(n) { 
+            if (typeof n === 'string') return parseFloat(n.replace(/,/g, "")) || 0;
+            return parseFloat(n) || 0;
+        }
+
+        function copyTableValues(tableId) {
+            const table = document.getElementById(tableId);
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            let copyText = "";
+            rows.forEach((row, rowIndex) => {
+                const inputs = Array.from(row.querySelectorAll('input'));
+                const values = inputs.map(input => input.value || "0");
+                copyText += values.join("\t") + (rowIndex < rows.length - 1 ? "\n" : "");
+            });
+            const el = document.createElement('textarea');
+            el.value = copyText;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("📋 คัดลอกข้อมูลตัวเลขแล้ว");
+        }
+
+        function handleSmartPaste(e) {
+            if (e.target.tagName !== 'INPUT' || !e.target.classList.contains('num-input')) return;
+            const clipboardData = e.clipboardData || window.clipboardData;
+            const pastedText = clipboardData.getData('text');
+            let values = pastedText.split(/[\t\n\r]/).map(v => v.trim()).filter(v => v !== "");
+            if (values.length > 1) {
+                e.preventDefault();
+                const table = e.target.closest('table');
+                const allInputs = Array.from(table.querySelectorAll('.num-input'));
+                const startIndex = allInputs.indexOf(e.target);
+                if (startIndex === -1) return;
+                let valueIdx = 0;
+                for (let i = startIndex; i < allInputs.length && valueIdx < values.length; i++) {
+                    const input = allInputs[i];
+                    const val = unformatNumber(values[valueIdx]);
+                    input.value = formatNumber(val, input.placeholder.includes('.00') ? 2 : 0);
+                    valueIdx++;
+                }
+                validateAll();
+                showToast(`✅ วางข้อมูลสำเร็จ ${values.length} ช่อง`);
+            }
+        }
+
+        function openConfirmModal(type, title, desc, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            const iconBox = document.getElementById('modal-icon-box');
+            const iconPath = document.getElementById('icon-path');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+            iconBox.className = "modal-icon-container " + (type === 'danger' ? 'icon-danger' : (type === 'info' ? 'icon-info' : 'icon-warning'));
+            confirmBtn.className = "flex-1 px-6 py-3 text-white rounded-xl font-bold shadow-lg transition active:scale-95 " + (type === 'danger' ? 'bg-red-500 hover:bg-red-600' : (type === 'info' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'));
+            if(type === 'danger') {
+                iconPath.setAttribute('d', 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z');
+            } else if (type === 'info') {
+                iconPath.setAttribute('d', 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z');
+            } else {
+                iconPath.setAttribute('d', 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z');
+            }
+            confirmBtn.onclick = () => { onConfirm(); closeConfirmModal(); };
+            modal.classList.add('active');
+        }
+
+        function closeConfirmModal() { document.getElementById('confirm-modal').classList.remove('active'); }
+
+        function handleClearCurrentPage() {
+            if (currentTab === 'verify') {
+                openConfirmModal('warning', 'ล้างหน้าตรวจสอบ?', 'คุณกำลังจะล้างข้อมูลที่กรอกไว้ในหน้าตรวจสอบทั้งหมด (ยอดสะสมจะไม่ถูกผลกระทบ)', () => {
+                    document.querySelectorAll('#page-verify .num-input').forEach(i => i.value = '');
+                    validateAll();
+                    showToast("🧹 ล้างหน้าตรวจสอบเรียบร้อย");
+                });
+            } else {
+                openConfirmModal('danger', 'รีเซ็ตยอดสะสมทั้งหมด?', 'ระวัง! ข้อมูลสรุปผลสะสมทั้งหมดและรอบการบันทึกจะถูกรีเซ็ตเป็นศูนย์ทันที', () => {
+                    document.querySelectorAll('#page-cumulative .num-input-cum').forEach(i => i.value = '');
+                    saveCounter = 0;
+                    savedHistory = []; 
+                    document.getElementById('save-count-badge').innerText = "0 รอบ";
+                    calculateCumulativeTotals();
+                    showToast("💥 รีเซ็ตข้อมูลสะสมทั้งหมดแล้ว");
+                });
+            }
+        }
+
+        function switchTab(t) {
+            currentTab = t;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`tab-${t}`).classList.add('active');
+            document.getElementById(`page-${t}`).classList.remove('hidden');
+            const saveControls = document.getElementById('verify-controls');
+            if(t === 'verify') {
+                saveControls.classList.remove('hidden');
+                validateAll();
+            } else {
+                saveControls.classList.add('hidden');
+                fetchCloudData(); // <--- เพิ่มบรรทัดนี้เพื่อดึงข้อมูลจาก Cloud เมื่อกดมาหน้า 2
+            }
+        }
+
+        function createSummaryTable(containerId, isCum = false) {
+            const container = document.getElementById(containerId);
+            const tid = `summary-table${isCum ? '-cum' : ''}`;
+            const inputClass = isCum ? 'num-input-cum' : 'num-input';
+            const tableClass = isCum ? 'cum-table-style' : '';
+            const div = document.createElement('div');
+            div.className = 'table-container';
+            div.innerHTML = `
+                <table id="${tid}" class="${tableClass}">
+                    <thead>
+                        <tr><th colspan="8">
+                            <div class="table-main-title">
+                                <span>ตารางที่ 1: สรุปภาพรวมรายรายการ ${isCum ? '(ยอดสะสม)' : ''}</span>
+                                ${!isCum ? `<button class="btn-clear-table no-print ml-4" onclick="clearSpecificTable('${tid}')">ล้างตารางนี้</button>` : `<button class="btn-copy-table no-print ml-4" onclick="copyTableValues('${tid}')">คัดลอกเฉพาะตัวเลข</button>`}
+                            </div>
+                        </th></tr>
+                        <tr><th style="width: 150px;">รายการ</th><th>จำนวนรายการ</th><th>จำนวนใบแจ้งหนี้</th><th>ค่าผ่านทาง</th><th>ค่าเสียหาย 2 เท่า</th><th>ค่าปรับ 10 เท่า</th><th>ค่าปรับ 200 บาท</th><th>ยอดเงินใบแจ้ง</th></tr>
+                    </thead>
+                    <tbody class="${isCum ? 'summary-body-cum' : 'summary-body-verify'}">
+                        ${['สมาชิก', 'ไม่ใช่สมาชิก'].map(label => `<tr><td class="row-label">${label}</td>${Array(7).fill(0).map((_, i) => `<td><input type="text" class="${inputClass}" placeholder="${[2,3,4,5,6].includes(i)?'0.00':'0'}">${!isCum ? '<span class="val-hint"></span>' : ''}</td>`).join('')}</tr>`).join('')}
+                        <tr class="total-row"><td class="row-label">รวม</td>${Array(7).fill(0).map((_, i) => `<td><input type="text" class="${inputClass}" placeholder="${[2,3,4,5,6].includes(i)?'0.00':'0'}">${!isCum ? '<span class="val-hint"></span>' : ''}</td>`).join('')}</tr>
+                    </tbody>
+                </table>
+            `;
+            container.appendChild(div);
+        }
+
+        function createTable(title, id, chs, cont, isCum = false) {
+            const div = document.createElement('div');
+            div.className = 'table-container dynamic-table-root';
+            const tid = `${id}-table${isCum ? '-cum' : ''}`;
+            const inputClass = isCum ? 'num-input-cum' : 'num-input';
+            const tableClass = isCum ? 'cum-table-style' : '';
+            div.innerHTML = `
+                <table id="${tid}" class="${tableClass}">
+                    <thead>
+                        <tr><th colspan="23">
+                            <div class="table-main-title">
+                                <span>${title}${isCum ? ' (ยอดสะสม)' : ''}</span>
+                                ${!isCum ? `<button class="btn-clear-table no-print ml-4" onclick="clearSpecificTable('${tid}')">ล้างตารางนี้</button>` : `<button class="btn-copy-table no-print ml-4" onclick="copyTableValues('${tid}')">คัดลอกเฉพาะตัวเลข</button>`}
+                            </div>
+                        </th></tr>
+                        <tr class="bg-gray-100"><th rowspan="3" style="width:140px">ช่องทางการชำระ</th><th colspan="14">สมาชิก</th><th colspan="6">ไม่ใช่สมาชิก</th><th rowspan="3">จำนวนรายการทั้งหมด</th><th rowspan="3">ยอดเงินรวมทั้งหมด (บาท)</th></tr>
+                        <tr><th colspan="4">บุคคลไทย</th><th colspan="4">ต่างชาติ</th><th colspan="4">นิติบุคคล</th><th rowspan="2">รวมรายการสมาชิก</th><th rowspan="2">รวมเงินสมาชิก</th><th colspan="4">ไม่ใช่สมาชิก</th><th rowspan="2">รวมรายการไม่ใช่สมาชิก</th><th rowspan="2">รวมเงินไม่ใช่สมาชิก</th></tr>
+                        <tr>${Array(4).fill('<th>C1</th><th>C2</th><th>C3</th><th>C4</th>').join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${chs.map(ch => `<tr><td class="row-label">${ch}</td>${Array(22).fill(0).map((_, i) => `<td><input type="text" class="${inputClass}" placeholder="${[13,19,21].includes(i)?'0.00':'0'}">${!isCum ? '<span class="val-hint"></span>' : ''}</td>`).join('')}</tr>`).join('')}
+                        <tr class="total-row"><td class="row-label">ยอดรวม</td>${Array(22).fill(0).map((_, i) => `<td><input type="text" class="${inputClass}" placeholder="${[13,19,21].includes(i)?'0.00':'0'}">${!isCum ? '<span class="val-hint"></span>' : ''}</td>`).join('')}</tr>
+                    </tbody>
+                </table>
+            `;
+            document.getElementById(cont).appendChild(div);
+        }
+
+        function clearSpecificTable(tableId) {
+            openConfirmModal('warning', 'ล้างข้อมูลตาราง?', 'คุณต้องการล้างข้อมูลในตารางที่เลือกนี้ใช่หรือไม่?', () => {
+                const table = document.getElementById(tableId);
+                table.querySelectorAll('input.num-input').forEach(input => input.value = '');
+                validateAll();
+            });
+        }
+
+        function validateAll() {
+            if (currentTab !== 'verify') return;
+            hasValidationErrors = false;
+            let total_C1C4_Member_AllTables = 0, total_C1C4_NonMember_AllTables = 0, global_MemberMoney = 0, global_NonMemberMoney = 0;
+            ['success', 'failed', 'pending', 'processing'].forEach(id => {
+                const table = document.getElementById(`${id}-table`);
+                if (!table) return;
+                const rows = Array.from(table.querySelectorAll('tbody tr'));
+                let colSums = Array(22).fill(0);
+                rows.forEach((row, rIdx) => {
+                    const isTotalRow = row.classList.contains('total-row');
+                    const ins = row.querySelectorAll('.num-input');
+                    const v = Array.from(ins).map(i => unformatNumber(i.value));
+                    const calcMemberQty = (v[0]+v[1]+v[2]+v[3]) + (v[4]+v[5]+v[6]+v[7]) + (v[8]+v[9]+v[10]+v[11]);
+                    const calcMemberMoney = ((v[0]+v[4]+v[8])*30) + ((v[1]+v[5]+v[9])*50) + ((v[2]+v[6]+v[10])*70);
+                    const calcNonMemberQty = v[14]+v[15]+v[16]+v[17];
+                    const calcNonMemberMoney = (v[14]*30) + (v[15]*50) + (v[16]*70);
+                    if (!isTotalRow) {
+                        if(updateFieldStatus(ins[12], v[12], calcMemberQty)) hasValidationErrors = true;
+                        if(updateFieldStatus(ins[13], v[13], calcMemberMoney, true)) hasValidationErrors = true;
+                        if(updateFieldStatus(ins[18], v[18], calcNonMemberQty)) hasValidationErrors = true;
+                        if(updateFieldStatus(ins[19], v[19], calcNonMemberMoney, true)) hasValidationErrors = true;
+                        if(updateFieldStatus(ins[20], v[20], calcMemberQty + calcNonMemberQty)) hasValidationErrors = true;
+                        if(updateFieldStatus(ins[21], v[21], calcMemberMoney + calcNonMemberMoney, true)) hasValidationErrors = true;
+                        v.forEach((val, idx) => colSums[idx] += val);
+                        total_C1C4_Member_AllTables += calcMemberQty;
+                        total_C1C4_NonMember_AllTables += calcNonMemberQty;
+                        global_MemberMoney += calcMemberMoney;
+                        global_NonMemberMoney += calcNonMemberMoney;
+                    } else {
+                        v.forEach((val, idx) => { if(updateFieldStatus(ins[idx], val, colSums[idx], [13,19,21].includes(idx))) hasValidationErrors = true; });
+                    }
                 });
             });
-            validateAllData();
-        }
-
-        function getNextRow(row, offset) {
-            let next = row;
-            for (let i = 0; i < offset; i++) if (next) next = next.nextElementSibling;
-            return next;
-        }
-
-        // Modal Controls
-        function openModal(type) {
-            pendingClearType = type;
-            const modal = document.getElementById('confirmModal');
-            const title = document.getElementById('modalTitle');
-            const desc = document.getElementById('modalDesc');
-            
-            if (type === 'all') {
-                title.innerText = "ล้างข้อมูลทั้งหมด?";
-                desc.innerText = "ข้อมูลในตารางทั้งหมด (1-5) จะถูกลบออกทั้งหมด";
-            } else if (type === 'summary') {
-                title.innerText = "ล้างข้อมูลตารางที่ 1?";
-                desc.innerText = "เฉพาะข้อมูลในตารางที่ 1 (สรุปยอดเงิน) จะถูกลบออก";
-            } else {
-                const section = sections.find(s => s.id === type);
-                title.innerText = `ล้างข้อมูล${section.title}?`;
-                desc.innerText = "ข้อมูลในตารางนี้จะถูกลบออกโดยไม่กระทบตารางอื่น";
+            const sRows = document.querySelectorAll('.summary-body-verify tr');
+            if (sRows.length >= 3) {
+                const mInps = sRows[0].querySelectorAll('.num-input'), nmInps = sRows[1].querySelectorAll('.num-input'), tInps = sRows[2].querySelectorAll('.num-input');
+                const mV = Array.from(mInps).map(i => unformatNumber(i.value)), nmV = Array.from(nmInps).map(i => unformatNumber(i.value));
+                if(updateFieldStatus(mInps[0], mV[0], total_C1C4_Member_AllTables)) hasValidationErrors = true;
+                if(updateFieldStatus(nmInps[0], nmV[0], total_C1C4_NonMember_AllTables)) hasValidationErrors = true;
+                if(updateFieldStatus(mInps[2], mV[2], global_MemberMoney, true)) hasValidationErrors = true;
+                if(updateFieldStatus(nmInps[2], nmV[2], global_NonMemberMoney, true)) hasValidationErrors = true;
+                if(updateFieldStatus(mInps[7], mV[7], mV[2]+mV[3]+mV[4]+mV[5]+mV[6], true)) hasValidationErrors = true;
+                if(updateFieldStatus(nmInps[7], nmV[7], nmV[2]+nmV[3]+nmV[4]+nmV[5]+nmV[6], true)) hasValidationErrors = true;
+                for(let i=0; i<8; i++) { if(tInps[i]) if(updateFieldStatus(tInps[i], unformatNumber(tInps[i].value), mV[i] + nmV[i], [2,3,4,5,6,7].includes(i))) hasValidationErrors = true; }
             }
-            
-            modal.classList.add('active');
-            document.getElementById('confirmBtn').onclick = confirmReset;
+            document.getElementById('error-status-msg').classList.toggle('hidden', !hasValidationErrors);
         }
 
-        function closeModal() {
-            document.getElementById('confirmModal').classList.remove('active');
-        }
-
-        function confirmReset() {
-            if (pendingClearType === 'all') {
-                document.querySelectorAll('input').forEach(i => i.value = '');
-            } else {
-                const containerId = `section-${pendingClearType}`;
-                const container = document.getElementById(containerId);
-                if (container) {
-                    container.querySelectorAll('input').forEach(i => i.value = '');
-                }
+        function calculateCumulativeTotals() {
+            ['success', 'failed', 'pending', 'processing'].forEach(id => {
+                const table = document.getElementById(`${id}-table-cum`);
+                if (!table) return;
+                const rows = Array.from(table.querySelectorAll('tbody tr:not(.total-row)')), totalRowInps = table.querySelectorAll('.total-row .num-input-cum');
+                let colSums = Array(22).fill(0);
+                rows.forEach(row => {
+                    const v = Array.from(row.querySelectorAll('.num-input-cum')).map(i => unformatNumber(i.value));
+                    v.forEach((val, idx) => colSums[idx] += val);
+                });
+                colSums.forEach((sum, idx) => { if (totalRowInps[idx]) totalRowInps[idx].value = formatNumber(sum, [13,19,21].includes(idx) ? 2 : 0); });
+            });
+            const sInpsRows = document.querySelectorAll('.summary-body-cum tr');
+            if (sInpsRows.length >= 3) {
+                const mInps = sInpsRows[0].querySelectorAll('.num-input-cum'), nmInps = sInpsRows[1].querySelectorAll('.num-input-cum'), totalInps = sInpsRows[2].querySelectorAll('.num-input-cum');
+                for(let i=0; i<8; i++) { if (mInps[i] && nmInps[i] && totalInps[i]) totalInps[i].value = formatNumber(unformatNumber(mInps[i].value) + unformatNumber(nmInps[i].value), [2,3,4,5,6,7].includes(i) ? 2 : 0); }
             }
-            validateAllData();
-            closeModal();
         }
 
-        function render() {
-            const container = document.getElementById('tablesContainer');
-            container.innerHTML = sections.map(s => createTable(s)).join('');
-            document.querySelectorAll('input').forEach(input => {
-                input.addEventListener('paste', handlePaste);
+        function updateFieldStatus(input, curValue, targetValue, isMoney = false) {
+            if (!input) return false;
+            const td = input.parentElement, hint = td.querySelector('.val-hint');
+            if(!hint) return false;
+            td.classList.remove('status-correct', 'status-incorrect');
+            hint.innerText = "";
+            if (input.value.trim() === "") return false;
+            hint.innerText = `(${formatNumber(targetValue, isMoney ? 2 : 0)})`;
+            const isCorrect = Math.abs(curValue - targetValue) < 0.01;
+            if (isCorrect) { td.classList.add('status-correct'); return false; } 
+            else { td.classList.add('status-incorrect'); return true; }
+        }
+
+        function handleSaveActionWithVerification() {
+            const allInputs = Array.from(document.querySelectorAll('#page-verify .num-input'));
+            const filledInputs = allInputs.filter(i => i.value.trim() !== "");
+            if (filledInputs.length === 0) {
+                openConfirmModal('danger', 'ไม่พบข้อมูล!', 'กรุณากรอกข้อมูลก่อนกดบันทึกยอดสะสม', () => {});
+                return;
+            }
+            if (hasValidationErrors) {
+                openConfirmModal('danger', 'ข้อมูลไม่ถูกต้อง!', 'โปรดแก้ไขข้อมูลในช่องสีแดงให้ถูกต้องตามตัวเลขในวงเล็บก่อนบันทึก', () => {});
+                return;
+            }
+            const currentFingerprint = allInputs.map(i => i.value.trim()).join('|');
+            const duplicateIndex = savedHistory.indexOf(currentFingerprint);
+            if (duplicateIndex !== -1) {
+                openConfirmModal('warning', 'ตรวจพบชุดข้อมูลซ้ำ!', `ชุดข้อมูลที่คุณกำลังจะบันทึก เหมือนกับข้อมูลรอบที่ ${duplicateIndex + 1} ทุกช่อง คุณยังต้องการบันทึกเพิ่มเข้าไปอีกใช่หรือไม่?`, () => {
+                    executeSave(currentFingerprint);
+                });
+                return;
+            }
+            openConfirmModal('info', 'ยืนยันการบันทึก?', 'คุณต้องการบันทึกชุดข้อมูลนี้และนำไปบวกเพิ่มในยอดสะสมใช่หรือไม่?', () => {
+                executeSave(currentFingerprint);
             });
         }
 
-        window.onload = render;
-        window.onclick = e => { if (e.target == document.getElementById('confirmModal')) closeModal(); }
+async function executeSave(fingerprint) {
+            // 1. เตรียมข้อมูลให้ตรงกับ Google Sheet (Timestamp จะถูกเติมที่ฝั่ง Script)
+            const dataToSave = {
+                staff_name: "พนักงาน_R11", // ตรงนี้สามารถเปลี่ยนเป็นชื่อคนคีย์ได้
+                payload: {
+                    summary: getSummaryDataArray(),
+                    tables: {
+                        success: getTableDataArray('success-table'),
+                        failed: getTableDataArray('failed-table'),
+                        pending: getTableDataArray('pending-table'),
+                        processing: getTableDataArray('processing-table')
+                    }
+                }
+            };
+
+            try {
+                showToast("⏳ กำลังบันทึกไปยัง Cloud...");
+                
+                // 2. ส่งข้อมูลไปยัง SCRIPT_URL
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(dataToSave) 
+                });
+
+                // 3. เมื่อบันทึกสำเร็จ ให้ล้างข้อมูลหน้าแรกเพื่อรอคีย์รอบใหม่
+                saveCounter++;
+                savedHistory.push(fingerprint);
+                document.getElementById('save-count-badge').innerText = `${saveCounter} รอบ`;
+                
+                document.querySelectorAll('#page-verify .num-input').forEach(i => i.value = '');
+                validateAll();
+                
+                // 4. ดึงยอดรวมล่าสุดจาก Cloud (ที่รวมของทุกคนแล้ว) มาโชว์ในหน้าสะสมทันที
+                await fetchCloudData(); 
+                
+                showToast(`✅ บันทึกรอบที่ ${saveCounter} และรวมยอดสำเร็จ!`);
+            } catch (error) {
+                console.error("Cloud Error:", error);
+                showToast("❌ บันทึกล้มเหลว: โปรดตรวจสอบการเชื่อมต่อ");
+            }
+        }
+        function showToast(m) {
+            const t = document.getElementById("toast"); t.innerText = m; t.className = "show";
+            setTimeout(() => t.className = "", 3000);
+        }
+
+        document.body.addEventListener('input', e => { if(e.target.classList.contains('num-input')) validateAll(); });
+        document.body.addEventListener('focusout', e => {
+            if(e.target.tagName === 'INPUT') {
+                const v = unformatNumber(e.target.value);
+                if(e.target.value.trim() !== "") e.target.value = formatNumber(v, e.target.placeholder.includes('.00') ? 2 : 0);
+            }
+        });
+        document.body.addEventListener('paste', handleSmartPaste);
+
+        window.onload = () => {
+            createSummaryTable('summary-section-verify', false);
+            createSummaryTable('summary-section-cum', true);
+            const cfgs = [
+                { title: "ตารางที่ 2: ชำระสำเร็จ", id: "success", chs: CHANNELS_GENERAL },
+                { title: "ตารางที่ 3: ชำระไม่สำเร็จ", id: "failed", chs: CHANNELS_TABLE3 },
+                { title: "ตารางที่ 4: รอดำเนินการชำระ (รายการ)", id: "pending", chs: CHANNELS_TABLE4 },
+                { title: "ตารางที่ 5: ระหว่างดำเนินการชำระ", id: "processing", chs: CHANNELS_TABLE5 }
+            ];
+            cfgs.forEach(c => {
+                createTable(c.title, c.id, c.chs, 'dynamic-tables-verify', false);
+                createTable(c.title, c.id, c.chs, 'dynamic-tables-cum', true);
+            });
+            setTimeout(() => { validateAll(); calculateCumulativeTotals(); }, 100);
+        };
     </script>
 </body>
 </html>
